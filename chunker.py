@@ -64,7 +64,7 @@ def fallback_split(
         start = 0
         index = 0
         while start < len(doc.text):
-            piece = doc.text[start : start + chunk_size].strip()
+            piece = doc.text[start: start + chunk_size].strip()
             if piece:
                 chunks.append(
                     Chunk(
@@ -82,22 +82,58 @@ def fallback_split(
 
 def split_documents(documents: list[Document]) -> list[Chunk]:
     """
-    Split documents into chunks. ⚠️ REPLACE THE BODY OF THIS IN MILESTONE 3.
+    Split each document using a 3-sentence sliding window.
 
-    Right now it just calls the fallback. That is the plain, generic behaviour
-    the brief is talking about.
+    Each chunk contains:
+        previous sentence + current sentence + next sentence
 
-    When you write your own strategy, set `produced_by` to
-    "chunker.py::split_documents" so your README's Sample Chunks section names
-    the right function. `app.py chunks` prints that string for you.
-
-    Things worth thinking about before you write any code:
-      - Are your documents short posts or long guides?
-      - Is the useful information in one sentence, or spread over a paragraph?
-      - Would splitting on paragraph breaks keep more thoughts intact than
-        splitting on a character count?
+    For the first sentence, the previous sentence is treated as empty.
+    For the last sentence, the next sentence is treated as empty.
     """
-    return fallback_split(documents)
+
+    import re
+
+    chunks = []
+
+    for document in documents:
+        # Split text at sentence boundaries.
+        sentences = re.split(
+            r'(?<=[.!?])\s+',
+            document.text.strip()
+        )
+
+        # Remove empty sentences.
+        sentences = [
+            sentence.strip()
+            for sentence in sentences
+            if sentence.strip()
+        ]
+
+        for i in range(len(sentences)):
+            previous_sentence = sentences[i - 1] if i > 0 else ""
+            current_sentence = sentences[i]
+            next_sentence = (
+                sentences[i + 1]
+                if i < len(sentences) - 1
+                else ""
+            )
+
+            chunk_text = " ".join([
+                previous_sentence,
+                current_sentence,
+                next_sentence,
+            ]).strip()
+
+            chunks.append(
+                Chunk(
+                    text=chunk_text,
+                    source=document.source,
+                    index=i,
+                    produced_by="chunker.py::split_documents",
+                )
+            )
+
+    return chunks
 
 
 def describe(chunks: list[Chunk]) -> str:
