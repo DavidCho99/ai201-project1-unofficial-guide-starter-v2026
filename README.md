@@ -94,9 +94,9 @@ Just finished a year in this building. Built 1954, partially renovated 2008. Roo
 <!-- One complete question and answer, pasted as text, with the source line
      visible. Milestone 4. -->
 
-**Question:**
+**Question:** Are the CS 340 Databases midterm and final open-book?
 
-**Answer:**
+**Answer:** Yes, both the midterm and the final for CS 340 Databases are open-book (course_cs_340.txt and course_cs_340_exams.txt).
 
 ```
 ```
@@ -112,9 +112,22 @@ Just finished a year in this building. Built 1954, partially renovated 2008. Roo
 
      Milestone 4. -->
 
-| Question | In corpus? | Best distance |
-| -------- | ---------- | ------------- |
-|          |            |               |
+**My relevance cutoff:** `0.7`
+
+I used five questions that are covered by the corpus and five out-of-scope questions that are not covered. The in-corpus questions had best distances between `0.1955` and `0.3821`, while the out-of-scope questions had best distances between `0.7873` and `0.8714`. This created a clear gap between `0.3821` and `0.7873`. I kept the relevance cutoff at `0.7` because it falls inside this gap. With this cutoff, all five in-corpus questions passed the gate and all five out-of-scope questions were refused.
+
+| Question                                                                                 | In corpus? | Best distance |
+| ---------------------------------------------------------------------------------------- | ---------- | ------------- |
+| How late can students add a course?                                                      | Yes        | 0.3821        |
+| How many hours per week outside class should students expect for CS 210 Data Structures? | Yes        | 0.1955        |
+| Are the CS 340 Databases midterm and final open-book?                                    | Yes        | 0.2718        |
+| How many hours per week outside class should students expect for ECON 101?               | Yes        | 0.2863        |
+| How late is the library open during the term?                                            | Yes        | 0.3361        |
+| What is the capital of Mongolia?                                                         | No         | 0.7873        |
+| How do I change the oil in a diesel engine?                                              | No         | 0.8493        |
+| Who won the 1994 World Cup?                                                              | No         | 0.8474        |
+| What is the recommended dosage of ibuprofen for a headache?                              | No         | 0.7985        |
+| How do I write a for loop in Rust?                                                       | No         | 0.8714        |
 
 ## How I Used AI
 
