@@ -23,8 +23,8 @@ For at least 4 of my 5 test questions, the retrieved chunks include one that
 contains the answer.
 
 **Why this target:**
-<!-- e.g. "One of my questions is about a topic only two documents mention, so
-     I expect that one to be hard." -->
+
+Retrieval is not always perfect, even when the answer exists somewhere in the corpus, because the embedding search may not always return the correct chunk among the top results. I allow one retrieval miss, but if the system misses two or more of the five questions, I would consider the retrieval too unreliable.
 
 ---
 
@@ -33,8 +33,9 @@ contains the answer.
 Every answer the system produces names at least one source document.
 
 **Why this target:**
-<!-- Why all five and not four? What about your setup makes that achievable —
-     or what would have to go wrong for it not to be? -->
+
+The goal of this system is to produce answers that are grounded in the provided documents. Therefore, every generated answer should identify its source, and if the documents do not contain enough information, the system should say that instead of producing an unsupported answer. Because grounding is a core requirement of the system, my target is 100%.
+
 
 ---
 
@@ -50,28 +51,21 @@ in at least 4 of 5 tries.
      just keep five of them, or the "4 of 5" above has nothing to be 4 of. -->
 
 **Why this target:**
-<!-- What did your distances look like when you set the cutoff in Milestone 4?
-     Was there a clean gap, or did the two groups overlap? -->
+
+Questions that are not covered by the corpus should be stopped before they reach the model because unrelated retrieved chunks could lead to unsupported answers. Semantic similarity is not a perfect classifier, so I allow one false positive, but if two or more unrelated questions pass the gate, I would consider the relevance gate too unreliable.
 
 ---
 
 ## 4. Something about your chunks
 
-<!-- YOU WRITE THIS ONE.
-
-     How would you know if your chunks were the right size? Name something
-     countable or observable.
-
-     Examples of the right shape — don't copy these, they should come from
-     what you actually saw in Milestone 3:
-       - "At least 4 of 5 sampled chunks read as a complete thought, with no
-          sentence cut in half at either end."
-       - "No chunk is shorter than 200 characters, since anything below that
-          in my corpus turned out to be a heading with no content under it." -->
+I will inspect 5 sampled chunks. 5 of them should keep a selected sentence together with its surrounding sentences when those sentences exist, so the chunk preserves enough context to be understood on its own.
 
 
 
 **Why this target:**
+
+I want every sampled chunk to preserve the context around its main sentence rather than cutting an idea into isolated pieces. I chose 5 out of 5 because preserving surrounding context is part of my chunking strategy, so each sampled chunk should follow that rule.
+
 
 
 
@@ -79,18 +73,12 @@ in at least 4 of 5 tries.
 
 ## 5. Your choice
 
-<!-- YOU WRITE THIS ONE TOO.
 
-     Pick something you actually care about getting right. It could be about
-     speed, about refusals, about a particular kind of question your corpus
-     handles badly, about source attribution being correct rather than merely
-     present — anything, as long as it names a number or an observable
-     outcome. -->
-
-
+For Every test questions, the answer should not include factual claims that are unsupported by the retrieved documents.
 
 **Why this target:**
 
+The purpose of the RAG system is to answer questions using the retrieved documents rather than adding information from the model’s existing knowledge. Because an unsupported factual claim would violate that goal and could mislead the user, I expect all 5 test answers to remain grounded in the retrieved evidence.
 
 
 ---
