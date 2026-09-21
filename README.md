@@ -140,9 +140,9 @@ I used five questions that are covered by the corpus and five out-of-scope quest
 
      Milestone 5. -->
 
-**1.**
+**1.** I asked ChatGPT to help turn my chunking idea into Python code. My idea was to make each chunk contain the current sentence together with the sentence before and after it. The first version of the code did not include the required `index` field for the `Chunk` class, so it produced a `TypeError`. I checked the `Chunk` class definition, showed it to ChatGPT, and then updated the function to assign `index=i` for each chunk within a document.
 
-**2.**
+**2.** I asked ChatGPT to help me analyze the relevance distances from my five in-corpus questions and five out-of-scope questions. The in-corpus distances ranged from `0.1955` to `0.3821`, while the out-of-scope distances ranged from `0.7873` to `0.8714`. Based on that comparison, I decided to keep the relevance cutoff at `0.7` because it falls clearly between the two groups. I then tested the cutoff and confirmed that all five in-corpus questions passed while all five out-of-scope questions were refused.
 
 <!-- ── Stretch features ─────────────────────────────────────────────────────
      Doing one? Say so here BEFORE you start. A feature this README never
