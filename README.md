@@ -169,14 +169,103 @@ I used five questions that are covered by the corpus and five out-of-scope quest
 
      Milestone 1. -->
 
-| Criterion                              | Target | Run 1 | Run 2 | Run 3 | Verdict |
-| -------------------------------------- | ------ | ----- | ----- | ----- | ------- |
-| 1. Retrieved chunk contains the answer | 4 of 5 |       |       |       |         |
-| 2. Every answer names a source         | 5 of 5 |       |       |       |         |
-| 3. Gate stops out-of-corpus questions  | 4 of 5 |       |       |       |         |
-| 4.                                     |        |       |       |       |         |
-| 5.                                     |        |       |       |       |         |
+| Criterion                                                               | Target                | Run 1  | Run 2  | Run 3  | Verdict |
+| ----------------------------------------------------------------------- | --------------------- | ------ | ------ | ------ | ------- |
+| 1. Retrieved chunk contains the answer                                  | 4 of 5                | 5 of 5 | 5 of 5 | 5 of 5 | MET     |
+| 2. Every answer names a source                                          | 5 of 5                | 5 of 5 | 5 of 5 | 5 of 5 | MET     |
+| 3. Gate stops out-of-corpus questions                                   | 4 of 5                | 5 of 5 | 5 of 5 | 5 of 5 | MET     |
+| 4. Chunks preserve enough surrounding context to stand alone            | 5 of 5 sampled chunks | 5 of 5 | 5 of 5 | 5 of 5 | MET     |
+| 5. Answers contain no factual claims unsupported by retrieved documents | 5 of 5                | 5 of 5 | 5 of 5 | 5 of 5 | MET     |
 
+
+
+The generated-answer evaluation was produced by `run_eval.py::main`. Retrieval was performed by `store.py::search`, and the chunks were produced by `chunker.py::split_documents`.
+
+### Criterion 1 — Retrieved chunk contains the answer
+
+Produced by `run_eval.py::main` using `store.py::search`.
+
+Question:
+
+> How many hours per week outside class should students expect for CS 210 Data Structures?
+
+Actual retrieval output:
+
+> Best distance: 0.1955  
+> Sources retrieved: `course_cs_210_workload.txt`, `course_econ_101.txt`, `course_stat_150_workload.txt`
+
+Actual generated answer:
+
+> Students should expect 8 to 10 hours a week outside class for CS 210 Data Structures (`course_cs_210_workload.txt`).
+
+The expected answer was present in the retrieved material.
+
+### Criterion 2 — Every answer names a source
+
+Produced by `run_eval.py::main`.
+
+Actual output:
+
+> Students should expect 4 hours a week outside class for ECON 101.
+>
+> Source: `course_econ_101_workload.txt`
+
+All five generated answers named at least one source in all three runs.
+
+### Criterion 3 — Gate stops out-of-corpus questions
+
+Produced by `run_eval.py::check_out_of_scope` with a relevance cutoff of `0.7`.
+
+Actual output:
+
+```text
+refused  (best distance 0.787)  What is the capital of Mongolia?
+refused  (best distance 0.849)  How do I change the oil in a diesel engine?
+refused  (best distance 0.847)  Who won the 1994 World Cup?
+refused  (best distance 0.798)  What is the recommended dosage of ibuprofen for a headache?
+refused  (best distance 0.871)  How do I write a for loop in Rust?
+-> gate refused 5 of 5
+```
+
+The gate refused all five out-of-corpus questions. Because retrieval and the relevance gate are deterministic, the same 5 of 5 result is reported in all three run columns.
+
+### Criterion 4 — Chunks preserve enough surrounding context to stand alone
+
+Produced by `chunker.py::split_documents` and displayed by `app.py::cmd_chunks`.
+
+Actual sampled chunk:
+
+```text
+Chunk 1 | source: admin_add_drop_deadline.txt#0 | produced by: chunker.py::split_documents
+
+On the add/drop deadline
+
+You can add a course through the end of the second week. Dropping is a longer window — through the end of week six — but a drop after week two shows as a W on your transcript.
+```
+
+Another sampled chunk:
+
+```text
+Chunk 2 | source: course_cs_340.txt#2 | produced by: chunker.py::split_documents
+
+Format is lecture twice a week plus a project that runs the whole term. Assessment: one midterm and a final, both open-book. Lightly curved, usually two or three points.
+```
+
+All five sampled chunks preserved enough surrounding context to be understood without needing to read the previous or following chunk.
+
+### Criterion 5 — Answers contain no unsupported factual claims
+
+Produced by `run_eval.py::main`.
+
+Actual output:
+
+> Yes, both the midterm and the final for CS 340 Databases are open-book (`course_cs_340.txt` and `course_cs_340_exams.txt`).
+
+The retrieved sources were:
+
+> `course_cs_210_exams.txt`, `course_cs_340.txt`, `course_cs_340_exams.txt`
+
+Across all five questions and all three runs, the generated answers stayed within the information provided by the retrieved documents.
 <!-- Underneath, paste the REAL output for each criterion from one of your
      runs — the actual text your system produced, not a description of it.
      Name the file and function that produced it. -->
@@ -192,15 +281,21 @@ I used five questions that are covered by the corpus and five out-of-scope quest
 
      Milestone 2. -->
 
-| #   | Criterion | Verdict | How I decided |
-| --- | --------- | ------- | ------------- |
-| 1   |           |         |               |
-| 2   |           |         |               |
-| 3   |           |         |               |
-| 4   |           |         |               |
-| 5   |           |         |               |
+| #   | Criterion                                                 | Verdict | How I decided                                                                                                                                               |
+| --- | --------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Retrieved chunk contains the answer                       | MET     | All five questions retrieved material containing the expected answer in all three runs, exceeding the 4-of-5 target.                                        |
+| 2   | Every answer names a source                               | MET     | All five generated answers named at least one source in every run, meeting the 5-of-5 target.                                                               |
+| 3   | Gate stops out-of-corpus questions                        | MET     | The relevance gate refused all five out-of-corpus questions at the 0.7 cutoff, exceeding the 4-of-5 target.                                                 |
+| 4   | Chunks preserve enough surrounding context to stand alone | MET     | I manually inspected five sampled chunks. All five retained enough surrounding information to understand the selected content without another chunk.        |
+| 5   | Answers contain no unsupported factual claims             | MET     | I checked the generated answers against their retrieved documents and found no unsupported factual claims in the five test questions across the three runs. |
 
 ## Diagnoses
+
+None of my five criteria were missed in the before run.
+
+However, some of my original targets were not very demanding. Criterion 1 required only 4 of 5 questions to retrieve the answer, while the system achieved 5 of 5 in every run. Criterion 3 also required only 4 of 5 out-of-corpus questions to be refused, while the gate refused all 5.
+
+If I tightened one criterion, I would change Criterion 1 from **at least 4 of 5 questions** to **5 of 5 questions**. Retrieval is especially important because generation cannot produce a reliably grounded answer if the information needed to answer the question never reaches the model.
 
 <!-- For each miss: which stage caused it, and how. The stage alone isn't
      enough — you need the mechanism.
