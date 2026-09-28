@@ -28,6 +28,7 @@ times over.
 `run_eval.py` passes cache=False for you.
 """
 
+import re
 import hashlib
 import json
 import os
@@ -256,9 +257,16 @@ def generate(prompt: str, system: str | None = None, cache: bool = True) -> str:
             )
             if not rate_limited:
                 raise
+            # The service tells us how long to wait ("retryDelay": "12s").
+            # Honour that when it's there — a fixed 2**attempt backoff can
+            # expire before the quota window has actually reset.
+            asked = re.search(r"retry.?delay['\"]?[:\s]+['\"]?(\d+(?:\.\d+)?)", 
+                              str(exc), re.IGNORECASE)
             backoff = 2 ** attempt
+            if asked:
+                backoff = max(backoff, float(asked.group(1)) + 1.0)
             print(
-                f"  [rate limit] service pushed back. Retrying in {backoff}s "
+                f"  [rate limit] service pushed back. Retrying in {backoff:.0f}s "
                 f"(attempt {attempt + 1} of {config.MAX_RETRIES}).",
                 file=sys.stderr,
                 flush=True,

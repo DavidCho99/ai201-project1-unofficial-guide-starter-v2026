@@ -17,6 +17,8 @@ rest of the project if they were wrong:
    install needs neither PyTorch nor a reachable Hugging Face. See `_embedder`.
 """
 
+from chunker import Chunk
+import config
 import os
 import shutil
 from dataclasses import dataclass
@@ -28,9 +30,6 @@ from dataclasses import dataclass
 os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
 
 import chromadb  # noqa: E402
-
-import config
-from chunker import Chunk
 
 
 @dataclass
@@ -164,7 +163,7 @@ def build_index(
 
     batch = 256
     for start in range(0, len(chunks), batch):
-        window = chunks[start : start + batch]
+        window = chunks[start: start + batch]
         collection.add(
             ids=[f"{c.source}#{c.index}" for c in window],
             documents=[c.text for c in window],

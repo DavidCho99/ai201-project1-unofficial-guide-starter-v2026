@@ -317,48 +317,147 @@ If I tightened one criterion, I would change Criterion 1 from **at least 4 of 5 
 
 ## The Improvement
 
-**What I changed:**
 
-**Why I picked it:**
+I made one change to the retrieval system: I reduced `top-k` from 5 to
+3.
+
+Before the change, the system retrieved up to five chunks for each
+question. The before evaluation showed that the correct source was
+usually ranked near the top, while some lower-ranked results were
+unrelated to the question.
+
+My hypothesis was that retrieving only the top three chunks would reduce
+irrelevant context while preserving the information required to answer
+the questions correctly.
+
+I did not change the relevance cutoff, chunking strategy, or grounding
+behavior as part of this improvement.
+
 
 <!-- Connect it to a specific diagnosis above in one sentence. If you can't,
      you picked a fix because it sounded impressive. -->
 
 ### Run Log — After
 
-<!-- Same format, same five criteria, three runs each.
-     `python run_eval.py --label after` -->
 
-| Criterion                              | Target | Run 1 | Run 2 | Run 3 | Verdict |
-| -------------------------------------- | ------ | ----- | ----- | ----- | ------- |
-| 1. Retrieved chunk contains the answer | 4 of 5 |       |       |       |         |
-| 2. Every answer names a source         | 5 of 5 |       |       |       |         |
-| 3. Gate stops out-of-corpus questions  | 4 of 5 |       |       |       |         |
-| 4.                                     |        |       |       |       |         |
-| 5.                                     |        |       |       |       |         |
+-   Produced by: `run_eval.py::main`
+-   Retrieval: `store.py::search`, chunks from
+    `chunker.py::split_documents`
+-   Corpus: `campus_life` (index variant `default`)
+-   Top-k: 3
+-   Relevance cutoff: 0.7
+-   Runs per question: 3, caching off
+-   When: 2026-09-27 21:18
+  
+| Criterion                                                               | Target                | Run 1  | Run 2  | Run 3  | Verdict |
+| ----------------------------------------------------------------------- | --------------------- | ------ | ------ | ------ | ------- |
+| 1. Retrieved chunk contains the answer                                  | 4 of 5                | 5 of 5 | 5 of 5 | 5 of 5 | MET     |
+| 2. Every answer names a source                                          | 5 of 5                | 5 of 5 | 5 of 5 | 5 of 5 | MET     |
+| 3. Gate stops out-of-corpus questions                                   | 4 of 5                | 5 of 5 | 5 of 5 | 5 of 5 | MET     |
+| 4. Chunks preserve enough surrounding context to stand alone            | 5 of 5 sampled chunks | 5 of 5 | 5 of 5 | 5 of 5 | MET     |
+| 5. Answers contain no factual claims unsupported by retrieved documents | 5 of 5                | 5 of 5 | 5 of 5 | 5 of 5 | MET     |
 
-**Did it help?**
+Criterion 3 is deterministic, so the 5/5 result is repeated across all
+three columns.
 
-<!-- Say plainly whether it did, and how you know. If it made things worse,
-     say that — a change that backfired, honestly reported, earns full credit
-     and is more interesting than one that worked. What matters is that you can
-     tell.
+## Real Output --- After
 
-     Milestone 4. -->
+Produced by `run_eval.py::main`.
 
-## What's Still Broken
+**Criterion 1 --- Retrieved chunks contain the answer**
 
-<!-- For each criterion still missed after your fix: what you'd do about it,
-     and why you stopped where you did.
+For CS 210, the system retrieved `course_cs_210_workload.txt`, which
+contained the expected 8 to 10 hours per week answer.
 
-     "I ran out of time" is fine if it's true. Pretending nothing is left is
-     not.
+Generated answer:
 
-     Milestone 5. -->
+> Students should expect 8 to 10 hours a week outside class for CS 210
+> Data Structures (source: `course_cs_210_workload.txt`).
 
-## What I'd Do Differently
+**Criterion 2 --- Every answer names a source**
 
-<!-- Knowing what you know now — which of your five criteria would you write
-     differently, and why?
+For ECON 101:
 
-     Milestone 5. -->
+> Students should expect 4 hours a week outside class for ECON 101.
+> Source: `course_econ_101_workload.txt`
+
+The answer directly identified the document supporting the claim.
+
+**Criterion 3 --- Relevance gate**
+
+The relevance gate again refused all 5/5 out-of-corpus questions.
+
+The best out-of-scope distances ranged from 0.787 to 0.871, all above
+the 0.7 cutoff.
+
+**Criterion 4 --- Chunk context**
+
+The chunking implementation was not changed as part of this improvement,
+so the same chunking criterion remained satisfied at 5/5.
+
+**Criterion 5 --- Grounding**
+
+All five questions passed all three generation runs without unsupported
+factual claims.
+
+For example:
+
+> Yes, both the midterm and the final for CS 340 Databases are open-book
+> (Sources: `course_cs_340.txt` and `course_cs_340_exams.txt`).
+
+# Did the Improvement Help?
+
+Yes, but the improvement was mainly in retrieval efficiency rather than
+answer accuracy.
+
+Before the change, the system used `top-k = 5`. After the change, it
+used `top-k = 3`. All five criteria remained MET, and all five test
+questions continued to pass in all three runs.
+
+The smaller top-k also reduced some unnecessary retrieval results. For
+example, after the change the CS 210 workload question retrieved
+`course_cs_210_workload.txt` and `course_stat_150_workload.txt` rather
+than sending up to five chunks to the generation stage.
+
+The improvement therefore reduced the amount of context sent to the
+model without reducing measured answer quality.
+
+However, it did not completely eliminate irrelevant retrieval. The CS
+210 question still retrieved a STAT 150 workload document, and the ECON
+101 question still retrieved a STAT 150 document. Therefore, reducing
+top-k helped limit irrelevant context but did not solve the underlying
+ranking problem.
+
+# What's Still Broken
+
+The main remaining weakness is retrieval precision.
+
+Even with `top-k = 3`, some unrelated documents are still retrieved. For
+example, the CS 210 workload question retrieved
+`course_stat_150_workload.txt`, and the ECON 101 workload question
+retrieved `course_stat_150.txt`.
+
+The generated answers were still correct because the relevant document
+ranked highly and the grounding instructions kept the model focused on
+the retrieved evidence. However, this could become a larger problem with
+a bigger corpus or more ambiguous questions.
+
+Another limitation is that my evaluation set contains only five
+in-corpus questions and five out-of-corpus questions. Passing this
+evaluation does not guarantee that the system will behave equally well
+on a much larger or more diverse set of questions.
+
+# What I'd Do Differently
+
+If I continued improving the system, I would test hybrid retrieval using
+both semantic search and keyword-based search such as BM25.
+
+Semantic search works well for questions that express the same idea
+using different wording, while keyword search could help prioritize
+documents containing exact course names, numbers, and terms such as
+`CS 210`, `ECON 101`, or `open-book`.
+
+I would also create a larger evaluation set with harder questions,
+including questions where multiple documents contain similar terms. This
+would make it easier to measure whether changes improve retrieval rather
+than relying only on five relatively straightforward questions.
